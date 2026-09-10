@@ -44,7 +44,19 @@ fit <- geosae(
         vardir = vardir, 
         nonlinear = "x3", 
         spatial = c("lat", "lon"), 
-        bootstrap = FALSE
+        bootstrap = TRUE,
+        B = 5
+      )
+
+#Estimate geoadditive SAE and compare with Fay-Herriot and Spatial Fay-Herriot
+fit <- geosae(
+        data = simulated_sae, 
+        formula = y ~ x1 + x2, 
+        vardir = vardir, 
+        nonlinear = "x3", 
+        spatial = c("lat", "lon"), 
+        compare = TRUE,
+        B = 5
       ) 
       
 print(fit) 
