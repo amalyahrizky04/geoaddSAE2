@@ -1,4 +1,4 @@
-## code to prepare `simulated_sae` dataset goes here
+## code to prepare `simulated_sae` dataset
 
 # Number of areas
 M <- 100
@@ -29,10 +29,7 @@ h_spatial <- 1.5 * sin(pi * lat / 180) * cos(pi * lon / 180)
 # True area parameter
 theta <- alpha + beta1 * x1 + beta2 * x2 + g_x3 + h_spatial
 
-# ------------------------------------------
 # Different sampling variances
-# ------------------------------------------
-
 # Different sample sizes for each area
 n_i <- sample(10:50, M, replace = TRUE)
 
@@ -42,16 +39,10 @@ sigma_e2 <- 1
 # Sampling variance for each area
 vardir <- sigma_e2 / n_i
 
-# ------------------------------------------
 # Direct estimator
-# ------------------------------------------
-
 y <- theta + rnorm(M, mean = 0, sd = sqrt(vardir))
 
-# ------------------------------------------
 # Population data
-# ------------------------------------------
-
 simulated_sae <- data.frame(
   area = sprintf("Area_%02d", 1:M),
   y = y,
