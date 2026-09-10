@@ -23,7 +23,7 @@ Amalyah Rizky Khairunnisa Sutarto <222212489@stis.ac.id>
 
 You can install the released version of geoaddSAE2 from
 [CRAN](https://CRAN.R-project.org) or find my github repository
-[Github](https://github.com/amalyahrizky4/geoaddSAE2)
+[Github](https://github.com/amalyahrizky04/geoaddSAE2)
 
 ## Example
 
