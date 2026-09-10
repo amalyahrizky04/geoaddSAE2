@@ -1,0 +1,43 @@
+Package: geoaddSAE2
+Type: Package
+Title: Geoadditive Small Area Estimation for Area-Level Model
+Version: 0.1.0
+Authors@R: c(
+    person(
+      given = "Amalyah Rizky Khairunnisa", 
+      family = "Sutarto",
+      email = "222212489@stis.ac.id",
+      role = c("aut", "cre")),
+    person(
+      given = "Novi Hidayat",
+      family = "Pusponegoro",
+      email = "novie@stis.ac.id",
+      role = c("aut", "ths")
+    )
+  )
+Description: Fits area-level Geoadditive Small Area Estimation (SAE) models: 
+    a semiparametric extension of the Fay-Herriot model that represents 
+    nonlinear covariate effects with penalized splines and spatial variation 
+    with a bivariate thin-plate smooth. The model is estimated by REML within 
+    a linear mixed model framework via the 'mgcv' package. By default, MSE is 
+    estimated using a parametric bootstrap. When bootstrap = FALSE, a 
+    model-based approximation based on the fitted GAM standard errors is 
+    returned. It also allows comparison against the classical Fay-Herriot and 
+    Spatial Fay-Herriot models provided by the 'sae' package.
+License: GPL (>= 3)
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.3.3
+Suggests: 
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+VignetteBuilder: knitr
+Depends: 
+    R (>= 3.5.0)
+Imports:
+    mgcv,
+    sae,
+    stats,
+    utils
