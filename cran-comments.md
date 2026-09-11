@@ -7,9 +7,6 @@
 
 0 errors | 0 warnings | 0 notes
 
-* This NOTE is related to the verification of file timestamps on the
-  local Windows environment.
-
 ## Downstream dependencies
 
 This is the first submission of `geoaddSAE2`, so there are no downstream dependencies to report.
