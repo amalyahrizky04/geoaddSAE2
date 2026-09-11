@@ -1,13 +1,6 @@
 #' geoaddSAE2: Geoadditive Small Area Estimation for Area Level
 #'
-#' Fits area-level Geoadditive Small Area Estimation (SAE) models: a
-#' extension of the Fay-Herriot model that represents nonlinear covariate
-#' effects with and spatial variation, estimated by REML within a linear
-#' mixed model framework (via \pkg{mgcv}), with Mean Squared Error obtained
-#' by parametric bootstrap. The package also lets users compare the
-#' geoadditive model against the classical Fay-Herriot and Spatial
-#' Fay-Herriot models, both of which are provided by, and fitted with, the
-#' existing \pkg{sae} package.
+#' Fits area-level Geoadditive Small Area Estimation (SAE) models: a extension of the Fay-Herriot model that represents nonlinear covariate effects with and spatial variation, estimated by REML within a linear mixed model framework (via \pkg{mgcv}), with Mean Squared Error obtained by parametric bootstrap. The package also lets users compare the geoadditive model against the classical Fay-Herriot and Spatial Fay-Herriot models, both of which are provided by, and fitted with, the existing \pkg{sae} package.
 #'
 #' Main entry point: \code{\link{geosae}}.
 #'
@@ -17,7 +10,6 @@
 utils::globalVariables(".inv_var")
 
 #' Build a row-standardized spatial proximity matrix
-#'
 #' @keywords internal
 #' @noRd
 build_proxmat <- function(coords, k = 4) {
@@ -39,13 +31,6 @@ build_proxmat <- function(coords, k = 4) {
 }
 
 #' Default number of knots (Ruppert's rule of thumb)
-#'
-#' Computes a default basis dimension for a univariate P-spline smoother,
-#' following the common rule of thumb used in penalized-spline literature
-#' (Ruppert, 2002): the number of knots grows with the number of unique
-#' covariate values, capped so that the model stays numerically stable for
-#' large samples.
-#'
 #' @keywords internal
 #' @noRd
 default_num_knots <- function(x, min_knots = 3, max_knots = 35) {
@@ -174,60 +159,26 @@ default_num_knots <- function(x, min_knots = 3, max_knots = 35) {
 
 #' Fit an area-level Geoadditive Small Area Estimation model
 #'
-#' Fits the area-level Geoadditive Small Area Estimation (Geoadditive SAE)
-#' model: a semiparametric extension of the Fay-Herriot model in which
-#' nonlinear covariate effects are represented with penalized splines
-#' (P-splines) and spatial variation with a bivariate thin plate regression
-#' spline, all cast in a linear mixed model and fitted by Restricted Maximum
-#' Likelihood (REML) via \pkg{mgcv}. Small area parameters are predicted by
-#' combining the fixed and random (spline) effects, and their Mean Squared
-#' Error is estimated via parametric bootstrap or analytical approximation.
+#' Fits the area-level Geoadditive Small Area Estimation (Geoadditive SAE) model: a semiparametric extension of the Fay-Herriot model in which nonlinear covariate effects are represented with penalized splines (P-splines) and spatial variation with a bivariate thin plate regression spline, all cast in a linear mixed model and fitted by Restricted Maximum Likelihood (REML) via \pkg{mgcv}. Small area parameters are predicted by combining the fixed and random (spline) effects, and their Mean Squared Error is estimated via parametric bootstrap or analytical approximation.
 #'
-#' Optionally (\code{compare = TRUE}), the classical Fay-Herriot and Spatial
-#' Fay-Herriot models are also fitted -- using the existing, well-tested
-#' implementations in the \pkg{sae} package (\code{sae::mseFH},
-#' \code{sae::eblupSFH}, \code{sae::mseSFH}) rather than re-implemented here
-#' -- so that all three models can be compared side by side.
+#' Optionally (\code{compare = TRUE}), the classical Fay-Herriot and Spatial Fay-Herriot models are also fitted -- using the existing, well-tested implementations in the \pkg{sae} package (\code{sae::mseFH}, \code{sae::eblupSFH}, \code{sae::mseSFH}) rather than re-implemented here -- so that all three models can be compared side by side.
 #'
-#' @param data A data frame containing the direct estimates, the known
-#'   sampling variances, the covariates, and (if used) spatial coordinates.
-#' @param formula A model formula \code{y ~ x1 + x2} giving the response
-#'   (direct estimator) on the left-hand side and the *linear* covariates on
-#'   the right-hand side. Use \code{y ~ 1} if there are no linear covariates.
-#' @param vardir Name of the column in \code{data} holding the known sampling
-#' variances of the direct estimator.
-#' @param nonlinear Character vector of covariate names to be modelled
-#'   nonlinearly with a P-spline. May be \code{NULL} or \code{character(0)}
-#'   if the user only has linear covariates.
-#' @param spatial Character vector of length 2 giving the names of the two
-#'   spatial coordinate columns (e.g. \code{c("lat", "lon")}). \code{NULL}
-#'   (default) fits the model without a spatial smooth.
-#' @param knots Optional. Controls the basis dimension (number of knots) of
-#'   each nonlinear P-spline term. \code{NULL} (default) uses an automatic
-#'   rule of thumb following Ruppert (2002).
-#' @param spatial_k Optional basis dimension for the spatial thin-plate
-#'   smooth. \code{NULL} uses \pkg{mgcv}'s default.
-#' @param method Smoothing-parameter selection method passed to
-#'   \code{mgcv::gam} (and to the \pkg{sae} comparison models when
-#'   \code{compare = TRUE}). Default \code{"REML"}.
-#' @param compare Logical. If \code{FALSE} (default), only the geoadditive
-#'   model is fitted. If \code{TRUE}, comparison models are fitted and a
-#'   comparison table (model | mse | rmse) is returned.
-#' @param proxmat Optional row-standardized spatial proximity/weight matrix
-#'   for the Spatial Fay-Herriot model. If \code{NULL} and \code{spatial} is
-#'   supplied with \code{compare = TRUE}, one is built automatically.
-#' @param proxmat_k Number of nearest neighbours used when \code{proxmat} is
-#'   built automatically. Default 4.
-#' @param bootstrap Logical. Whether to estimate the MSE of the geoadditive
-#'   predictor via parametric bootstrap (\code{TRUE}). If \code{FALSE}, an
-#'   analytical model-based approximation using the standard errors of the
-#'   fitted GAM is used. Default \code{TRUE}.
+#' @param data A data frame containing the direct estimates, the known sampling variances, the covariates, and (if used) spatial coordinates.
+#' @param formula A model formula \code{y ~ x1 + x2} giving the response (direct estimator) on the left-hand side and the *linear* covariates on the right-hand side. Use \code{y ~ 1} if there are no linear covariates.
+#' @param vardir Name of the column in \code{data} holding the known sampling variances of the direct estimator.
+#' @param nonlinear Character vector of covariate names to be modelled nonlinearly with a P-spline. May be \code{NULL} or \code{character(0)} if the user only has linear covariates.
+#' @param spatial Character vector of length 2 giving the names of the two spatial coordinate columns (e.g. \code{c("lat", "lon")}). \code{NULL} (default) fits the model without a spatial smooth.
+#' @param knots Optional. Controls the basis dimension (number of knots) of each nonlinear P-spline term. \code{NULL} (default) uses an automatic rule of thumb following Ruppert (2002).
+#' @param spatial_k Optional basis dimension for the spatial thin-plate smooth. \code{NULL} uses \pkg{mgcv}'s default.
+#' @param method Smoothing-parameter selection method passed to \code{mgcv::gam} (and to the \pkg{sae} comparison models when \code{compare = TRUE}). Default \code{"REML"}.
+#' @param compare Logical. If \code{FALSE} (default), only the geoadditive model is fitted. If \code{TRUE}, comparison models are fitted and a comparison table (model | mse | rmse) is returned.
+#' @param proxmat Optional row-standardized spatial proximity/weight matrix for the Spatial Fay-Herriot model. If \code{NULL} and \code{spatial} is supplied with \code{compare = TRUE}, one is built automatically.
+#' @param proxmat_k Number of nearest neighbours used when \code{proxmat} is built automatically. Default 4.
+#' @param bootstrap Logical. Whether to estimate the MSE of the geoadditive predictor via parametric bootstrap (\code{TRUE}). If \code{FALSE}, an analytical model-based approximation using the standard errors of the fitted GAM is used. Default \code{TRUE}.
 #' @param B Number of parametric bootstrap replicates. Default 100.
 #' @param seed Optional integer seed for the bootstrap, for reproducibility.
 #'
-#' @returns An object of class \code{"geosae"}, a list containing the call,
-#'   settings, estimation results, diagnostics, fixed-effect parameters,
-#'   model comparisons (if requested), and underlying fitted model objects.
+#' @returns An object of class \code{"geosae"}, a list containing the call, settings, estimation results, diagnostics, fixed-effect parameters, model comparisons (if requested), and underlying fitted model objects.
 #'
 #' @examples
 #' \donttest{

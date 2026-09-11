@@ -22,76 +22,42 @@ geosae(
 )
 }
 \arguments{
-\item{data}{A data frame containing the direct estimates, the known
-sampling variances, the covariates, and (if used) spatial coordinates.}
+\item{data}{A data frame containing the direct estimates, the known sampling variances, the covariates, and (if used) spatial coordinates.}
 
-\item{formula}{A model formula \code{y ~ x1 + x2} giving the response
-(direct estimator) on the left-hand side and the *linear* covariates on
-the right-hand side. Use \code{y ~ 1} if there are no linear covariates.}
+\item{formula}{A model formula \code{y ~ x1 + x2} giving the response (direct estimator) on the left-hand side and the *linear* covariates on the right-hand side. Use \code{y ~ 1} if there are no linear covariates.}
 
-\item{vardir}{Name of the column in \code{data} holding the known sampling
-variances of the direct estimator.}
+\item{vardir}{Name of the column in \code{data} holding the known sampling variances of the direct estimator.}
 
-\item{nonlinear}{Character vector of covariate names to be modelled
-nonlinearly with a P-spline. May be \code{NULL} or \code{character(0)}
-if the user only has linear covariates.}
+\item{nonlinear}{Character vector of covariate names to be modelled nonlinearly with a P-spline. May be \code{NULL} or \code{character(0)} if the user only has linear covariates.}
 
-\item{spatial}{Character vector of length 2 giving the names of the two
-spatial coordinate columns (e.g. \code{c("lat", "lon")}). \code{NULL}
-(default) fits the model without a spatial smooth.}
+\item{spatial}{Character vector of length 2 giving the names of the two spatial coordinate columns (e.g. \code{c("lat", "lon")}). \code{NULL} (default) fits the model without a spatial smooth.}
 
-\item{knots}{Optional. Controls the basis dimension (number of knots) of
-each nonlinear P-spline term. \code{NULL} (default) uses an automatic
-rule of thumb following Ruppert (2002).}
+\item{knots}{Optional. Controls the basis dimension (number of knots) of each nonlinear P-spline term. \code{NULL} (default) uses an automatic rule of thumb following Ruppert (2002).}
 
-\item{spatial_k}{Optional basis dimension for the spatial thin-plate
-smooth. \code{NULL} uses \pkg{mgcv}'s default.}
+\item{spatial_k}{Optional basis dimension for the spatial thin-plate smooth. \code{NULL} uses \pkg{mgcv}'s default.}
 
-\item{method}{Smoothing-parameter selection method passed to
-\code{mgcv::gam} (and to the \pkg{sae} comparison models when
-\code{compare = TRUE}). Default \code{"REML"}.}
+\item{method}{Smoothing-parameter selection method passed to \code{mgcv::gam} (and to the \pkg{sae} comparison models when \code{compare = TRUE}). Default \code{"REML"}.}
 
-\item{compare}{Logical. If \code{FALSE} (default), only the geoadditive
-model is fitted. If \code{TRUE}, comparison models are fitted and a
-comparison table (model | mse | rmse) is returned.}
+\item{compare}{Logical. If \code{FALSE} (default), only the geoadditive model is fitted. If \code{TRUE}, comparison models are fitted and a comparison table (model | mse | rmse) is returned.}
 
-\item{proxmat}{Optional row-standardized spatial proximity/weight matrix
-for the Spatial Fay-Herriot model. If \code{NULL} and \code{spatial} is
-supplied with \code{compare = TRUE}, one is built automatically.}
+\item{proxmat}{Optional row-standardized spatial proximity/weight matrix for the Spatial Fay-Herriot model. If \code{NULL} and \code{spatial} is supplied with \code{compare = TRUE}, one is built automatically.}
 
-\item{proxmat_k}{Number of nearest neighbours used when \code{proxmat} is
-built automatically. Default 4.}
+\item{proxmat_k}{Number of nearest neighbours used when \code{proxmat} is built automatically. Default 4.}
 
-\item{bootstrap}{Logical. Whether to estimate the MSE of the geoadditive
-predictor via parametric bootstrap (\code{TRUE}). If \code{FALSE}, an
-analytical model-based approximation using the standard errors of the
-fitted GAM is used. Default \code{TRUE}.}
+\item{bootstrap}{Logical. Whether to estimate the MSE of the geoadditive predictor via parametric bootstrap (\code{TRUE}). If \code{FALSE}, an analytical model-based approximation using the standard errors of the fitted GAM is used. Default \code{TRUE}.}
 
 \item{B}{Number of parametric bootstrap replicates. Default 100.}
 
 \item{seed}{Optional integer seed for the bootstrap, for reproducibility.}
 }
 \value{
-An object of class \code{"geosae"}, a list containing the call,
-  settings, estimation results, diagnostics, fixed-effect parameters,
-  model comparisons (if requested), and underlying fitted model objects.
+An object of class \code{"geosae"}, a list containing the call, settings, estimation results, diagnostics, fixed-effect parameters, model comparisons (if requested), and underlying fitted model objects.
 }
 \description{
-Fits the area-level Geoadditive Small Area Estimation (Geoadditive SAE)
-model: a semiparametric extension of the Fay-Herriot model in which
-nonlinear covariate effects are represented with penalized splines
-(P-splines) and spatial variation with a bivariate thin plate regression
-spline, all cast in a linear mixed model and fitted by Restricted Maximum
-Likelihood (REML) via \pkg{mgcv}. Small area parameters are predicted by
-combining the fixed and random (spline) effects, and their Mean Squared
-Error is estimated via parametric bootstrap or analytical approximation.
+Fits the area-level Geoadditive Small Area Estimation (Geoadditive SAE) model: a semiparametric extension of the Fay-Herriot model in which nonlinear covariate effects are represented with penalized splines (P-splines) and spatial variation with a bivariate thin plate regression spline, all cast in a linear mixed model and fitted by Restricted Maximum Likelihood (REML) via \pkg{mgcv}. Small area parameters are predicted by combining the fixed and random (spline) effects, and their Mean Squared Error is estimated via parametric bootstrap or analytical approximation.
 }
 \details{
-Optionally (\code{compare = TRUE}), the classical Fay-Herriot and Spatial
-Fay-Herriot models are also fitted -- using the existing, well-tested
-implementations in the \pkg{sae} package (\code{sae::mseFH},
-\code{sae::eblupSFH}, \code{sae::mseSFH}) rather than re-implemented here
--- so that all three models can be compared side by side.
+Optionally (\code{compare = TRUE}), the classical Fay-Herriot and Spatial Fay-Herriot models are also fitted -- using the existing, well-tested implementations in the \pkg{sae} package (\code{sae::mseFH}, \code{sae::eblupSFH}, \code{sae::mseSFH}) rather than re-implemented here -- so that all three models can be compared side by side.
 }
 \examples{
 \donttest{

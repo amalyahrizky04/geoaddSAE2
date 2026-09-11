@@ -37,15 +37,17 @@ library(geoaddSAE2)
 #Load the dataset
 data(simulated_sae)
 
-#Estimate geoadditive SAE
+#Estimate geoadditive SAE only
 fit <- geosae(
         data = simulated_sae, 
         formula = y ~ x1 + x2, 
         vardir = vardir, 
         nonlinear = "x3", 
+        knots = c("x3" = 10),
         spatial = c("lat", "lon"), 
         bootstrap = TRUE,
-        B = 5
+        B = 10,
+        seed = 1
       )
 
 #Estimate geoadditive SAE and compare with Fay-Herriot and Spatial Fay-Herriot
@@ -54,9 +56,12 @@ fit <- geosae(
         formula = y ~ x1 + x2, 
         vardir = vardir, 
         nonlinear = "x3", 
+        knots = c("x3" = 10),
         spatial = c("lat", "lon"), 
         compare = TRUE,
-        B = 5
+        bootstrap = TRUE,
+        B = 10,
+        seed = 1
       ) 
       
 print(fit) 

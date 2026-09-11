@@ -6,15 +6,7 @@
 \alias{geoaddSAE2-package}
 \title{geoaddSAE2: Geoadditive Small Area Estimation for Area Level}
 \description{
-Fits area-level Geoadditive Small Area Estimation (SAE) models: a
-semiparametric extension of the Fay-Herriot model that represents
-nonlinear covariate effects with penalized splines and spatial variation
-with a bivariate thin-plate smooth, estimated by REML within a linear
-mixed model framework (via \pkg{mgcv}), with Mean Squared Error obtained
-by parametric bootstrap. The package also lets users compare the
-geoadditive model against the classical Fay-Herriot and Spatial
-Fay-Herriot models, both of which are provided by, and fitted with, the
-existing \pkg{sae} package.
+Fits area-level Geoadditive Small Area Estimation (SAE) models: a extension of the Fay-Herriot model that represents nonlinear covariate effects with and spatial variation, estimated by REML within a linear mixed model framework (via \pkg{mgcv}), with Mean Squared Error obtained by parametric bootstrap. The package also lets users compare the geoadditive model against the classical Fay-Herriot and Spatial Fay-Herriot models, both of which are provided by, and fitted with, the existing \pkg{sae} package.
 }
 \details{
 Main entry point: \code{\link{geosae}}.

@@ -1,23 +1,36 @@
 #' Simulated area-level small area estimation data
 #'
-#' A synthetic area-level dataset used in the package examples and tests. It
-#' mimics a typical Geoadditive SAE demonstration setup: a linear covariate,
-#' a nonlinear covariate, spatial coordinates, and a direct estimator with
-#' known sampling variance -- generated from a true model with a linear
-#' effect, a nonlinear covariate effect, and a smooth spatial effect.
+#' @description A synthetic area-level small area estimation dataset used in
+#' package examples, demonstrations, and tests.
+#'
+#' The data are generated using the following steps:
+#'
+#' \enumerate{
+#'   \item The population consists of 100 small areas, and a seed is set to ensure reproducibility of the simulated data.
+#'   \item Two-dimensional spatial coordinates are generated for each area, where latitude is generated from \eqn{U(-11, 6)} and longitude is generated from \eqn{U(95, 141)}.
+#'   \item Two linear auxiliary variables are generated for each area: \eqn{x1 ~ Bernoulli(0.9)} and \eqn{x2 ~ U(1, 5)}. A nonlinear auxiliary variable \eqn{x3 ~ U(1, 5)} is also generated.
+#'   \item The model parameters are set deterministically as \eqn{\alpha = 0.5}, \eqn{\beta_1 = 1}, and \eqn{\beta_2 = 1}.
+#'   \item The nonlinear covariate effect is generated using \eqn{g(x3) = x3^2}.
+#'   \item A continuous spatial effect is generated from the spatial coordinates using the smooth function \eqn{h(lat, lon) = sin(lat) + cos(lon)}.
+#'   \item The true small area parameter is calculated as \eqn{theta = \alpha + \beta_1 x1 + \beta_2 x2 + g(x3) + h(lat, lon)}.
+#'   \item The number of sampled units in each area is generated from \eqn{n_i ~ U{10, 50}}. The sampling error variance is then defined as \eqn{vardir = \sigma_e^2/n_i}, where \eqn{\sigma_e^2 = 1}.
+#'   \item The direct estimator is generated according to the sampling model \eqn{y = theta + e}, where \eqn{e ~ N(0, vardir)}.
+#'   \item The area identifier, direct estimator, auxiliary variables, spatial coordinates, sampling variance, and true small area parameter are combined into a data frame called \code{simulated_sae}.
+#' }
 #'
 #' @format A data frame with 100 rows and 9 columns:
 #' \describe{
 #'   \item{area}{Area identifier.}
 #'   \item{y}{Direct estimator (response).}
-#'   \item{x1}{Covariate with a linear effect on \code{y}.}
-#'   \item{x2}{Another covariate with a linear effect on \code{y}.}
-#'   \item{x3}{Covariate with a nonlinear effect on \code{y}.}
+#'   \item{x1}{Binary auxiliary variable with a linear effect on the response.}
+#'   \item{x2}{Continuous auxiliary variable with a linear effect on the response.}
+#'   \item{x3}{Continuous auxiliary variable with a nonlinear effect on the response.}
 #'   \item{lat}{Latitude-like spatial coordinate.}
 #'   \item{lon}{Longitude-like spatial coordinate.}
 #'   \item{vardir}{Known sampling variance of the direct estimator.}
-#'   \item{theta}{True small area parameter used to generate the simulated data.}
+#'   \item{theta}{True small area parameter used to generate the direct estimator.}
 #' }
+#'
 #' @examples
 #' data(simulated_sae)
 #' head(simulated_sae)
