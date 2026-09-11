@@ -406,8 +406,13 @@ geosae <- function(data,
                  row.names = NULL, stringsAsFactors = FALSE)
     } else NULL,
     variance_components = if (length(fit$smooth) > 0) {
-      vc <- utils::capture.output(vc_mat <- mgcv::gam.vcomp(fit, conf.lev = 0.95))
-      data.frame(term = rownames(vc_mat), std_dev = vc_mat[, "std.dev"], row.names = NULL, stringsAsFactors = FALSE)
+      vc_mat <- mgcv::gam.vcomp(fit, conf.lev = 0.95)$vc
+      data.frame(
+        term = rownames(vc_mat),
+        std_dev = vc_mat[, "std.dev"],
+        row.names = NULL,
+        stringsAsFactors = FALSE
+      )
     } else NULL,
     r_sq_adj          = smry$r.sq,
     deviance_explained = smry$dev.expl,

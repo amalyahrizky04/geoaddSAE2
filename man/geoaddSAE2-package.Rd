@@ -24,6 +24,7 @@ Main entry point: \code{\link{geosae}}.
 
 Authors:
 \itemize{
+  \item Amalyah Rizky Khairunnisa Sutarto \email{222212489@stis.ac.id}
   \item Novi Hidayat Pusponegoro \email{novie@stis.ac.id} [thesis advisor]
 }
 
