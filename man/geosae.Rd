@@ -53,7 +53,7 @@ smooth. \code{NULL} uses \pkg{mgcv}'s default.}
 
 \item{compare}{Logical. If \code{FALSE} (default), only the geoadditive
 model is fitted. If \code{TRUE}, comparison models are fitted and a
-comparison table (model | mse | rmse | mape) is returned.}
+comparison table (model | mse | rmse) is returned.}
 
 \item{proxmat}{Optional row-standardized spatial proximity/weight matrix
 for the Spatial Fay-Herriot model. If \code{NULL} and \code{spatial} is

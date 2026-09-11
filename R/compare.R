@@ -60,7 +60,6 @@
     model = model_name,
     mse   = mean(mse, na.rm = TRUE),
     rmse  = mean(sqrt(mse), na.rm = TRUE),
-    mape  = mean(abs((direct - est) / direct), na.rm = TRUE) * 100,
     stringsAsFactors = FALSE
   )
 }

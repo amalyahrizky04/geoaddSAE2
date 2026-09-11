@@ -1,9 +1,8 @@
 #' geoaddSAE2: Geoadditive Small Area Estimation for Area Level
 #'
 #' Fits area-level Geoadditive Small Area Estimation (SAE) models: a
-#' semiparametric extension of the Fay-Herriot model that represents
-#' nonlinear covariate effects with penalized splines and spatial variation
-#' with a bivariate thin-plate smooth, estimated by REML within a linear
+#' extension of the Fay-Herriot model that represents nonlinear covariate
+#' effects with and spatial variation, estimated by REML within a linear
 #' mixed model framework (via \pkg{mgcv}), with Mean Squared Error obtained
 #' by parametric bootstrap. The package also lets users compare the
 #' geoadditive model against the classical Fay-Herriot and Spatial
@@ -18,13 +17,6 @@
 utils::globalVariables(".inv_var")
 
 #' Build a row-standardized spatial proximity matrix
-#'
-#' Constructs a simple k-nearest-neighbour, row-standardized spatial weight
-#' matrix from a set of coordinates. This matrix can be supplied to
-#' \code{\link{geosae}} (argument \code{proxmat}) for the Spatial Fay-Herriot
-#' comparison model, or built automatically by \code{\link{geosae}} whenever
-#' \code{spatial} is supplied and \code{compare = TRUE} but no \code{proxmat}
-#' is given.
 #'
 #' @keywords internal
 #' @noRd
@@ -220,7 +212,7 @@ default_num_knots <- function(x, min_knots = 3, max_knots = 35) {
 #'   \code{compare = TRUE}). Default \code{"REML"}.
 #' @param compare Logical. If \code{FALSE} (default), only the geoadditive
 #'   model is fitted. If \code{TRUE}, comparison models are fitted and a
-#'   comparison table (model | mse | rmse | mape) is returned.
+#'   comparison table (model | mse | rmse) is returned.
 #' @param proxmat Optional row-standardized spatial proximity/weight matrix
 #'   for the Spatial Fay-Herriot model. If \code{NULL} and \code{spatial} is
 #'   supplied with \code{compare = TRUE}, one is built automatically.
@@ -375,7 +367,6 @@ geosae <- function(data,
     )
     mse_geo <- boot_info$mse
   } else {
-    # Analytical MSE berdasarkan Standard Error pemulusan gam
     mse_geo <- as.numeric(pred$se.fit)^2
   }
 
