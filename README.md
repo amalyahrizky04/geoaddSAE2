@@ -25,6 +25,11 @@ You can install the released version of geoaddSAE2 from
 [CRAN](https://CRAN.R-project.org) or find my github repository
 [Github](https://github.com/amalyahrizky04/geoaddSAE2)
 
+``` r
+install.packages("remotes")
+remotes::install_github("amalyahrizky04/geoaddSAE2")
+```
+
 ## Example
 
 The following example illustrates the basic use of geosae().
