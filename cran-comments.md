@@ -1,8 +1,11 @@
-This is a resubmission. In this version, I have addressed the previous reviewer's comments:
+This is a resubmission.
 
-* Formatted the references in the DESCRIPTION file using the requested format (Authors (year) <doi:...>).
-* Spelled out all acronyms in the Description text upon first use (SAE, FH, REML, MSE, SFH).
-* Added `\value` tags to `print.geosae.Rd` and `summary.geosae.Rd` to explicitly explain the output and side effects.
+In this version:
+
+* Removed the non-standard `References` field from the DESCRIPTION file.
+* Added relevant methodological references directly to the `Description`
+  field using the requested Authors (year) <doi:...> format.
+* Checked the package using R CMD check --as-cran.
 
 ## Test environments
 

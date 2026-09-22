@@ -16,18 +16,19 @@ Authors@R: c(
     )
   )
 Description: Fits area-level geoadditive small area estimation (SAE)
-    models, extending the Fay-Herriot (FH) model to allow linear,
-    nonlinear, and spatial effects. Nonlinear covariate effects are
-    represented using penalized splines, while spatial effects are
-    represented using a smooth function of geographic coordinates.
-    Models are estimated using restricted maximum likelihood (REML),
-    and mean squared error (MSE) is estimated using a parametric
-    bootstrap. The package also provides comparisons with the
-    Fay-Herriot and spatial Fay-Herriot (SFH) models.
-References: Fay and Herriot (1979) <doi:10.1080/01621459.1979.10482505>;
-    Ruppert (2002) <doi:10.1198/016214502188618529>;
-    Pusponegoro et al. (2019) <doi:10.21108/JDSA.2019.2.15>;
-    Wood (2025) <doi:10.1146/annurev-statistics-112723-034249>
+    models by extending the Fay-Herriot area-level model with linear,
+    nonlinear, and spatial effects. The Fay-Herriot model is described by
+    Fay and Herriot (1979) <doi:10.1080/01621459.1979.10482505>.
+    Geoadditive models combine nonlinear covariate effects and spatial
+    variation as described by Kammann and Wand (2003)
+    <doi:10.1111/1467-9876.00385>, while their application to small area
+    estimation is discussed by Pusponegoro et al. (2019)
+    <doi:10.21108/JDSA.2019.2.15>. Nonlinear covariate effects are represented
+    using penalized splines, while spatial effects are represented using a
+    smooth function of geographic coordinates. Models are estimated using
+    restricted maximum likelihood (REML), and mean squared error (MSE) is
+    estimated using a parametric bootstrap. The package also provides
+    comparisons with the Fay-Herriot and spatial Fay-Herriot (SFH) models.
 License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
