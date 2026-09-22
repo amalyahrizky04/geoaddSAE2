@@ -15,15 +15,19 @@ Authors@R: c(
       role = c("aut", "ths")
     )
   )
-Description: Fits area-level Geoadditive Small Area Estimation (SAE) models: 
-    a semiparametric extension of the Fay-Herriot model that represents 
-    nonlinear covariate effects with penalized splines and spatial variation 
-    with a bivariate thin-plate smooth. The model is estimated by REML within 
-    a linear mixed model framework via the 'mgcv' package. By default, MSE is 
-    estimated using a parametric bootstrap. When bootstrap = FALSE, a 
-    model-based approximation based on the fitted GAM standard errors is 
-    returned. It also allows comparison against the classical Fay-Herriot and 
-    Spatial Fay-Herriot models provided by the 'sae' package.
+Description: Fits area-level geoadditive small area estimation (SAE)
+    models, extending the Fay-Herriot (FH) model to allow linear,
+    nonlinear, and spatial effects. Nonlinear covariate effects are
+    represented using penalized splines, while spatial effects are
+    represented using a smooth function of geographic coordinates.
+    Models are estimated using restricted maximum likelihood (REML),
+    and mean squared error (MSE) is estimated using a parametric
+    bootstrap. The package also provides comparisons with the
+    Fay-Herriot and spatial Fay-Herriot (SFH) models.
+References: Fay and Herriot (1979) <doi:10.1080/01621459.1979.10482505>;
+    Ruppert (2002) <doi:10.1198/016214502188618529>;
+    Pusponegoro et al. (2019) <doi:10.21108/JDSA.2019.2.15>;
+    Wood (2025) <doi:10.1146/annurev-statistics-112723-034249>
 License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true

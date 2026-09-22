@@ -14,19 +14,52 @@ utils::globalVariables(".inv_var")
 #' @noRd
 build_proxmat <- function(coords, k = 4) {
   coords <- as.matrix(coords)
-  n <- nrow(coords)
-  if (n < 2) stop("Need at least 2 areas to build a proximity matrix.", call. = FALSE)
-  k <- min(k, n - 1)
 
+  if (!is.numeric(coords)) {
+    stop("`coords` must contain numeric spatial coordinates.", call. = FALSE)
+  }
+
+  if (anyNA(coords)) {
+    stop("`coords` must not contain missing values.", call. = FALSE)
+  }
+
+  n <- nrow(coords)
+
+  if (n < 2) {
+    stop("At least two areas are required to build a proximity matrix.", call. = FALSE)
+  }
+
+  if (length(k) != 1L || !is.numeric(k) || is.na(k) || k < 1) {
+    stop("`k` must be a positive integer.", call. = FALSE)
+  }
+
+  k <- as.integer(k)
+  k <- min(k, n - 1L)
   d <- as.matrix(stats::dist(coords))
-  W <- matrix(0, n, n)
+  W <- matrix(0, nrow = n, ncol = n)
+
   for (i in seq_len(n)) {
-    nn <- order(d[i, ])[2:(k + 1)]
+    d_i <- d[i, ]
+    d_i[i] <- Inf
+    nn <- order(d_i)[seq_len(k)]
     W[i, nn] <- 1
   }
+
+  diag(W) <- 0
   rs <- rowSums(W)
-  rs[rs == 0] <- 1
+
+  if (any(rs == 0)) {
+    stop("At least one area has no spatial neighbours.", call. = FALSE)
+  }
+
+  # Row-standardization
   W <- W / rs
+
+  # Final checks
+  if (any(!is.finite(W))) {
+    stop("The resulting proximity matrix contains non-finite values.", call. = FALSE)
+  }
+
   W
 }
 
@@ -159,57 +192,33 @@ default_num_knots <- function(x, min_knots = 3, max_knots = 35) {
 
 #' Fit an area-level Geoadditive Small Area Estimation model
 #'
-#' Fits the area-level Geoadditive Small Area Estimation (Geoadditive SAE) model: a semiparametric extension of the Fay-Herriot model in which nonlinear covariate effects are represented with penalized splines (P-splines) and spatial variation with a bivariate thin plate regression spline, all cast in a linear mixed model and fitted by Restricted Maximum Likelihood (REML) via \pkg{mgcv}. Small area parameters are predicted by combining the fixed and random (spline) effects, and their Mean Squared Error is estimated via parametric bootstrap or analytical approximation.
+#' Fits area-level Geoadditive Small Area Estimation (SAE) models: a extension of the Fay-Herriot model that represents nonlinear covariate effects with and spatial variation, estimated by REML within a linear mixed model framework (via \pkg{mgcv}), with Mean Squared Error obtained by parametric bootstrap. The package also lets users compare the geoadditive model against the classical Fay-Herriot and Spatial Fay-Herriot models, both of which are provided by, and fitted with, the existing \pkg{sae} package.
 #'
 #' Optionally (\code{compare = TRUE}), the classical Fay-Herriot and Spatial Fay-Herriot models are also fitted -- using the existing, well-tested implementations in the \pkg{sae} package (\code{sae::mseFH}, \code{sae::eblupSFH}, \code{sae::mseSFH}) rather than re-implemented here -- so that all three models can be compared side by side.
 #'
 #' @param data A data frame containing the direct estimates, the known sampling variances, the covariates, and (if used) spatial coordinates.
 #' @param formula A model formula \code{y ~ x1 + x2} giving the response (direct estimator) on the left-hand side and the *linear* covariates on the right-hand side. Use \code{y ~ 1} if there are no linear covariates.
 #' @param vardir Name of the column in \code{data} holding the known sampling variances of the direct estimator.
-#' @param nonlinear Character vector of covariate names to be modelled nonlinearly with a P-spline. May be \code{NULL} or \code{character(0)} if the user only has linear covariates.
-#' @param spatial Character vector of length 2 giving the names of the two spatial coordinate columns (e.g. \code{c("lat", "lon")}). \code{NULL} (default) fits the model without a spatial smooth.
+#' @param nonlinear Character vector of covariate names to be modelled nonlinearly with a P-spline.
+#' @param spatial Character vector of length 2 giving the names of the two spatial coordinate columns (e.g. \code{c("lat", "lon")}).
 #' @param knots Optional. Controls the basis dimension (number of knots) of each nonlinear P-spline term. \code{NULL} (default) uses an automatic rule of thumb following Ruppert (2002).
 #' @param spatial_k Optional basis dimension for the spatial thin-plate smooth. \code{NULL} uses \pkg{mgcv}'s default.
 #' @param method Smoothing-parameter selection method passed to \code{mgcv::gam} (and to the \pkg{sae} comparison models when \code{compare = TRUE}). Default \code{"REML"}.
 #' @param compare Logical. If \code{FALSE} (default), only the geoadditive model is fitted. If \code{TRUE}, comparison models are fitted and a comparison table (model | mse | rmse) is returned.
-#' @param proxmat Optional row-standardized spatial proximity/weight matrix for the Spatial Fay-Herriot model. If \code{NULL} and \code{spatial} is supplied with \code{compare = TRUE}, one is built automatically.
-#' @param proxmat_k Number of nearest neighbours used when \code{proxmat} is built automatically. Default 4.
+#' @param proxmat Optional spatial proximity matrix for the Spatial Fay-Herriot model. The matrix should have one row and one column for each area, with zero diagonal and row-standardized spatial weights. If \code{NULL} and \code{compare = TRUE} with \code{spatial} specified, the matrix is constructed automatically using k-nearest neighbours based on the spatial coordinates.
+#' @param proxmat_k Number of nearest neighbours used to construct the automatic spatial proximity matrix when \code{proxmat = NULL}. Default is 4.
 #' @param bootstrap Logical. Whether to estimate the MSE of the geoadditive predictor via parametric bootstrap (\code{TRUE}). If \code{FALSE}, an analytical model-based approximation using the standard errors of the fitted GAM is used. Default \code{TRUE}.
 #' @param B Number of parametric bootstrap replicates. Default 100.
 #' @param seed Optional integer seed for the bootstrap, for reproducibility.
 #'
 #' @returns An object of class \code{"geosae"}, a list containing the call, settings, estimation results, diagnostics, fixed-effect parameters, model comparisons (if requested), and underlying fitted model objects.
 #'
-#' @examples
-#' \donttest{
-#' # Load the dataset
-#' data(simulated_sae)
-#'
-#' # Estimate the geoadditive model and compare it with the
-#' # Fay-Herriot and spatial Fay-Herriot models
-#' fit <- geosae(
-#'   data      = simulated_sae,
-#'   formula   = y ~ x1,
-#'   vardir    = vardir,
-#'   nonlinear = "x2",
-#'   knots     = c("x2" = 5),
-#'   spatial   = c("lat", "lon"),
-#'   compare   = TRUE,
-#'   B         = 50,
-#'   seed      = 1
-#' )
-#'
-#' # Print summary and diagnostic model
-#' print(fit)
-#' summary(fit)
-#' }
-#'
 #' @export
 geosae <- function(data,
                    formula,
                    vardir,
-                   nonlinear   = NULL,
-                   spatial     = NULL,
+                   nonlinear,
+                   spatial,
                    knots       = NULL,
                    spatial_k   = NULL,
                    method      = c("REML"),
@@ -244,30 +253,35 @@ geosae <- function(data,
 
   linear_terms <- attr(stats::terms(formula), "term.labels")
 
-  nonlinear <- if (is.null(nonlinear)) character(0) else as.character(nonlinear)
-  if (length(nonlinear) > 0) {
-    missing_nl <- setdiff(nonlinear, names(data))
-    if (length(missing_nl) > 0) {
-      stop("`nonlinear` variable(s) not found in `data`: ", paste(missing_nl, collapse = ", "), call. = FALSE)
-    }
-    overlap <- intersect(nonlinear, linear_terms)
-    if (length(overlap) > 0) {
-      stop("Variable(s) listed in both `formula` and `nonlinear`: ", paste(overlap, collapse = ", "),
-           ". Remove them from `formula` if they should be modelled nonlinearly.", call. = FALSE)
-    }
+  if (is.null(nonlinear) || length(nonlinear) == 0) {
+    stop("`nonlinear` must contain at least one covariate for the Geoadditive SAE model.", call. = FALSE)
   }
 
-  if (!is.null(spatial)) {
-    if (length(spatial) != 2) {
-      stop("`spatial` must be a character vector of length 2, e.g. c(\"lat\", \"lon\").", call. = FALSE)
-    }
-    missing_sp <- setdiff(spatial, names(data))
-    if (length(missing_sp) > 0) {
-      stop("`spatial` variable(s) not found in `data`: ",paste(missing_sp, collapse = ", "), call. = FALSE)
-    }
-    if (!all(vapply(data[spatial], is.numeric, logical(1)))) {
-      stop("Spatial coordinate variables must be numeric.", call. = FALSE)
-    }
+  nonlinear <- as.character(nonlinear)
+
+  missing_nl <- setdiff(nonlinear, names(data))
+  if (length(missing_nl) > 0) {
+    stop("`nonlinear` variable(s) not found in `data`: ", paste(missing_nl, collapse = ", "), call. = FALSE)
+  }
+
+  overlap <- intersect(nonlinear, linear_terms)
+  if (length(overlap) > 0) {
+    stop("Variable(s) listed in both `formula` and `nonlinear`: ", paste(overlap, collapse = ", "), ". Remove them from `formula` if they should be modelled nonlinearly.", call. = FALSE)
+  }
+
+  if (is.null(spatial) || length(spatial) != 2) {
+    stop("`spatial` must be a character vector of length 2, e.g. c(\"lat\", \"lon\").", call. = FALSE)
+  }
+
+  spatial <- as.character(spatial)
+
+  missing_sp <- setdiff(spatial, names(data))
+  if (length(missing_sp) > 0) {
+    stop("`spatial` variable(s) not found in `data`: ", paste(missing_sp, collapse = ", "), call. = FALSE)
+  }
+
+  if (!all(vapply(data[spatial], is.numeric, logical(1)))) {
+    stop("Spatial coordinate variables must be numeric.", call. = FALSE)
   }
 
   nonlinear_k <- stats::setNames(vector("list", length(nonlinear)), nonlinear)
@@ -326,12 +340,13 @@ geosae <- function(data,
   } else {
     as.character(seq_len(nrow(data)))
   }
+
   estimation <- data.frame(
     area            = area_id,
-    direct          = data[[response]],
+    direct_est      = data[[response]],
+    direct_mse      = data[[vardir_name]],
     geoadditive_est = point_est,
-    mse             = mse_geo,
-    rmse            = sqrt(mse_geo),
+    geoadditive_mse = mse_geo,
     stringsAsFactors = FALSE
   )
   rownames(estimation) <- NULL
@@ -377,16 +392,24 @@ geosae <- function(data,
 
   if (isTRUE(compare)) {
     rows <- list()
+
+    # Fit Fay-Herriot
     fh_res <- .fit_fh(formula, vardir_name, data, method = method)
-    models$fh <- fh_res$fit
+    models$fh <- fh_res
     rows$fh <- .comparison_row("Fay-Herriot", fh_res$estimates, fh_res$mse, data[[response]])
 
-    if (!is.null(spatial)) {
-      if (is.null(proxmat)) proxmat <- build_proxmat(data[, spatial], k = proxmat_k)
-      sfh_res <- .fit_sfh(formula, vardir_name, proxmat, data, method = method)
-      models$sfh <- sfh_res$fit
-      rows$sfh <- .comparison_row("Spatial Fay-Herriot", sfh_res$estimates, sfh_res$mse, data[[response]])
-    }
+    estimation$fh_est <- fh_res$estimates
+    estimation$fh_mse <- fh_res$mse
+
+    if (is.null(proxmat)) proxmat <- build_proxmat(data[, spatial, drop = FALSE], k = proxmat_k)
+
+    # Fit Spatial Fay-Herriot
+    sfh_res <- .fit_sfh(formula, vardir_name, proxmat, data, method = method)
+    models$sfh <- sfh_res
+    rows$sfh <- .comparison_row("Spatial Fay-Herriot", sfh_res$estimates, sfh_res$mse, data[[response]])
+
+    estimation$sfh_est <- sfh_res$estimates
+    estimation$sfh_mse <- sfh_res$mse
 
     rows$geo <- .comparison_row("Geoadditive SAE", point_est, mse_geo, data[[response]])
 
@@ -416,15 +439,18 @@ geosae <- function(data,
 #'
 #' @param x An object of class \code{geosae}
 #' @param digits Number of decimal digits to print. Default 4.
-#' @param ... Additional arguments
+#' @param ... Additional arguments passed to other methods.
+#' @returns Invisibly returns the input object of class \code{"geosae"}.
+#' The method prints the main model settings and area-level estimation
+#' results to the console.
 #' @export
 print.geosae <- function(x, digits = 4, ...) {
   cat("=== Geoadditive Small Area Estimation Model ===\n\n")
 
   s <- x$settings
   if (!is.null(s$formula)) cat("Formula (linear) :", deparse(s$formula), "\n")
-  cat("Nonlinear terms  :", if (length(s$nonlinear) == 0) "(none)" else paste(s$nonlinear, collapse = ", "), "\n")
-  cat("Spatial terms    :", if (is.null(s$spatial)) "(none)" else paste(s$spatial, collapse = ", "), "\n")
+  cat("Nonlinear terms  :", paste(s$nonlinear, collapse = ", "), "\n")
+  cat("Spatial terms    :", paste(s$spatial, collapse = ", "), "\n")
   cat("Number of Areas  :", nrow(x$estimation), "\n\n")
 
   print(x$estimation, digits)
@@ -436,7 +462,11 @@ print.geosae <- function(x, digits = 4, ...) {
 #' Summary method for geosae object
 #'
 #' @param object An object of class \code{geosae}
-#' @param ... Additional arguments
+#' @param ... Additional arguments passed to other methods.
+#' @returns Invisibly returns the input object of class \code{"geosae"}.
+#' The method prints model diagnostics, fixed-effect parameter estimates,
+#' smooth-term information, MSE and RMSE summaries, and model comparison
+#' results when available.
 #' @export
 summary.geosae <- function(object, ...) {
   cat("=== Summary: Geoadditive Small Area Estimation Model ===\n\n")
@@ -485,12 +515,12 @@ summary.geosae <- function(object, ...) {
   }
 
   mse_type <- if (isTRUE(s$bootstrap)) { "Bootstrap" }
-              else {"Analytical Model-Based"}
+  else {"Analytical Model-Based"}
 
-  cat(sprintf("MSE & RMSE Summary across areas (%s):\n", mse_type))
+  cat(sprintf("MSE Summary across areas (%s):\n", mse_type))
 
-  mse <- object$estimation$mse
-  rmse <- object$estimation$rmse
+  mse <- object$estimation$geoadditive_mse
+  rmse <- sqrt(mse)
 
   err_summary <- data.frame(
     Min = c(min(mse, na.rm = TRUE), min(rmse, na.rm = TRUE)),

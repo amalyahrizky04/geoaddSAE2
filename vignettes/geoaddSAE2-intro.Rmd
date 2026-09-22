@@ -14,20 +14,15 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>",
 
 ## Background
 
-`geosae` fits the **area-level Geoadditive Small Area Estimation (Geoadditive
-SAE)** model: a semiparametric extension of the Fay-Herriot model in which
+`geosae` fits the **area-level Geoadditive Small Area Estimation (Geoadditive SAE)** model: a semiparametric extension of the Fay-Herriot model in which
 
-* linear covariate effects are modelled as usual,
-* nonlinear covariate effects are modelled with penalized splines (P-splines), and
-* spatial variation is modelled with a bivariate thin plate regression spline,
+- linear covariate effects are modelled as usual,
+- nonlinear covariate effects are modelled with penalized splines (P-splines), and
+- spatial variation is modelled with a bivariate thin plate regression spline,
 
-all represented jointly as a linear mixed model and fitted by Restricted
-Maximum Likelihood (REML). The Mean Squared Error (MSE) of the resulting
-small area predictor is obtained by parametric bootstrap.
+all represented jointly as a linear mixed model and fitted by Restricted Maximum Likelihood (REML). The Mean Squared Error (MSE) of the resulting small area predictor is obtained by parametric bootstrap.
 
-The classical Fay-Herriot (FH) and Spatial Fay-Herriot (SFH) models are
-**not** re-implemented: `geosae` calls the existing implementations by the `sae` package so that the three approaches can be fitted and compared
-consistently.
+The classical Fay-Herriot (FH) and Spatial Fay-Herriot (SFH) models are **not** re-implemented: `geosae` calls the existing implementations by the `sae` package so that the three approaches can be fitted and compared consistently.
 
 ## A minimal example
 
@@ -37,9 +32,7 @@ data(simulated_sae)
 head(simulated_sae)
 ```
 
-`simulated_sae` has a direct estimator `y`, a known sampling variance
-`vardir`, a linear covariate `x1`, a nonlinear covariate `x2`, and spatial
-coordinates `lat`/`lon`.
+`simulated_sae` has a direct estimator `y`, a known sampling variance `vardir`, a linear covariate `x1`, a nonlinear covariate `x2`, and spatial coordinates `lat`/`lon`.
 
 ### Geoadditive SAE only
 
@@ -64,8 +57,7 @@ summary(fit)
 
 ### Comparing Geoadditive SAE, Fay-Herriot, and Spatial Fay-Herriot
 
-Set `compare = TRUE` to also fit FH (always) and SFH (whenever `spatial` is
-supplied), and get a side-by-side comparison table.
+Set `compare = TRUE` to also fit FH (always) and SFH (whenever `spatial` is supplied), and get a side-by-side comparison table.
 
 ```{r}
 fit_cmp <- geosae(
@@ -85,12 +77,8 @@ fit_cmp$comparison
 
 A fitted `geosae` object cleanly separates:
 
-* `fit$estimation` -- direct estimate, geoadditive estimate, MSE, RMSE per area;
-* `fit$diagnostics` -- convergence, EDF of smooth terms, variance components, R-sq, deviance explained;
-* `fit$parameters` -- fixed-effect (linear) coefficient table;
-* `fit$comparison` -- model | mse | rmse | mape, when `compare = TRUE`;
-* `fit$models` -- the underlying fitted model objects, for advanced use.
-
-```{r}
-# plot(fit, which = "smooth")
-```
+- `fit$estimation` -- direct estimate, geoadditive estimate, MSE, RMSE per area;
+- `fit$diagnostics` -- convergence, EDF of smooth terms, variance components, R-sq, deviance explained;
+- `fit$parameters` -- fixed-effect (linear) coefficient table;
+- `fit$comparison` -- model \| mse \| rmse, when `compare = TRUE`;
+- `fit$models` -- the underlying fitted model objects, for advanced use.

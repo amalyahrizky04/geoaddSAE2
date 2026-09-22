@@ -6,3 +6,4 @@
 ^data-raw$
 ^\.RDataTmp$
 ^cran-comments\.md$
+^CRAN-SUBMISSION$

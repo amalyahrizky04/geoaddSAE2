@@ -9,7 +9,13 @@
 \arguments{
 \item{object}{An object of class \code{geosae}}
 
-\item{...}{Additional arguments}
+\item{...}{Additional arguments passed to other methods.}
+}
+\value{
+Invisibly returns the input object of class \code{"geosae"}.
+The method prints model diagnostics, fixed-effect parameter estimates,
+smooth-term information, MSE and RMSE summaries, and model comparison
+results when available.
 }
 \description{
 Summary method for geosae object

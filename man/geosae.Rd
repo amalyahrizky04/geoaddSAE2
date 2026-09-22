@@ -8,8 +8,8 @@ geosae(
   data,
   formula,
   vardir,
-  nonlinear = NULL,
-  spatial = NULL,
+  nonlinear,
+  spatial,
   knots = NULL,
   spatial_k = NULL,
   method = c("REML"),
@@ -28,9 +28,9 @@ geosae(
 
 \item{vardir}{Name of the column in \code{data} holding the known sampling variances of the direct estimator.}
 
-\item{nonlinear}{Character vector of covariate names to be modelled nonlinearly with a P-spline. May be \code{NULL} or \code{character(0)} if the user only has linear covariates.}
+\item{nonlinear}{Character vector of covariate names to be modelled nonlinearly with a P-spline.}
 
-\item{spatial}{Character vector of length 2 giving the names of the two spatial coordinate columns (e.g. \code{c("lat", "lon")}). \code{NULL} (default) fits the model without a spatial smooth.}
+\item{spatial}{Character vector of length 2 giving the names of the two spatial coordinate columns (e.g. \code{c("lat", "lon")}).}
 
 \item{knots}{Optional. Controls the basis dimension (number of knots) of each nonlinear P-spline term. \code{NULL} (default) uses an automatic rule of thumb following Ruppert (2002).}
 
@@ -40,9 +40,9 @@ geosae(
 
 \item{compare}{Logical. If \code{FALSE} (default), only the geoadditive model is fitted. If \code{TRUE}, comparison models are fitted and a comparison table (model | mse | rmse) is returned.}
 
-\item{proxmat}{Optional row-standardized spatial proximity/weight matrix for the Spatial Fay-Herriot model. If \code{NULL} and \code{spatial} is supplied with \code{compare = TRUE}, one is built automatically.}
+\item{proxmat}{Optional spatial proximity matrix for the Spatial Fay-Herriot model. The matrix should have one row and one column for each area, with zero diagonal and row-standardized spatial weights. If \code{NULL} and \code{compare = TRUE} with \code{spatial} specified, the matrix is constructed automatically using k-nearest neighbours based on the spatial coordinates.}
 
-\item{proxmat_k}{Number of nearest neighbours used when \code{proxmat} is built automatically. Default 4.}
+\item{proxmat_k}{Number of nearest neighbours used to construct the automatic spatial proximity matrix when \code{proxmat = NULL}. Default is 4.}
 
 \item{bootstrap}{Logical. Whether to estimate the MSE of the geoadditive predictor via parametric bootstrap (\code{TRUE}). If \code{FALSE}, an analytical model-based approximation using the standard errors of the fitted GAM is used. Default \code{TRUE}.}
 
@@ -54,33 +54,8 @@ geosae(
 An object of class \code{"geosae"}, a list containing the call, settings, estimation results, diagnostics, fixed-effect parameters, model comparisons (if requested), and underlying fitted model objects.
 }
 \description{
-Fits the area-level Geoadditive Small Area Estimation (Geoadditive SAE) model: a semiparametric extension of the Fay-Herriot model in which nonlinear covariate effects are represented with penalized splines (P-splines) and spatial variation with a bivariate thin plate regression spline, all cast in a linear mixed model and fitted by Restricted Maximum Likelihood (REML) via \pkg{mgcv}. Small area parameters are predicted by combining the fixed and random (spline) effects, and their Mean Squared Error is estimated via parametric bootstrap or analytical approximation.
+Fits area-level Geoadditive Small Area Estimation (SAE) models: a extension of the Fay-Herriot model that represents nonlinear covariate effects with and spatial variation, estimated by REML within a linear mixed model framework (via \pkg{mgcv}), with Mean Squared Error obtained by parametric bootstrap. The package also lets users compare the geoadditive model against the classical Fay-Herriot and Spatial Fay-Herriot models, both of which are provided by, and fitted with, the existing \pkg{sae} package.
 }
 \details{
 Optionally (\code{compare = TRUE}), the classical Fay-Herriot and Spatial Fay-Herriot models are also fitted -- using the existing, well-tested implementations in the \pkg{sae} package (\code{sae::mseFH}, \code{sae::eblupSFH}, \code{sae::mseSFH}) rather than re-implemented here -- so that all three models can be compared side by side.
-}
-\examples{
-\donttest{
-# Load the dataset
-data(simulated_sae)
-
-# Estimate the geoadditive model and compare it with the
-# Fay-Herriot and spatial Fay-Herriot models
-fit <- geosae(
-  data      = simulated_sae,
-  formula   = y ~ x1,
-  vardir    = vardir,
-  nonlinear = "x2",
-  knots     = c("x2" = 5),
-  spatial   = c("lat", "lon"),
-  compare   = TRUE,
-  B         = 50,
-  seed      = 1
-)
-
-# Print summary and diagnostic model
-print(fit)
-summary(fit)
-}
-
 }

@@ -11,7 +11,12 @@
 
 \item{digits}{Number of decimal digits to print. Default 4.}
 
-\item{...}{Additional arguments}
+\item{...}{Additional arguments passed to other methods.}
+}
+\value{
+Invisibly returns the input object of class \code{"geosae"}.
+The method prints the main model settings and area-level estimation
+results to the console.
 }
 \description{
 Print method for geosae object
