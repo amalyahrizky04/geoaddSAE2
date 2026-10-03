@@ -6,3 +6,9 @@
 * Supports nonlinear covariate effects, spatial smooths, and
   parametric bootstrap MSE estimation.
 * Provides comparison with Fay-Herriot and Spatial Fay-Herriot models.
+
+# geoaddSAE2 0.1.1
+
+* Fixed calculation of parametric bootstrap MSE.
+* Improved input validation in `geosae()`.
+* Updated documentation and examples.

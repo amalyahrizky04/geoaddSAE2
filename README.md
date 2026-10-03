@@ -50,7 +50,6 @@ fit <- geosae(
         nonlinear = "x3", 
         knots = c("x3" = 10),
         spatial = c("lat", "lon"), 
-        bootstrap = TRUE,
         B = 10,
         seed = 1
       )
@@ -64,7 +63,6 @@ fit <- geosae(
         knots = c("x3" = 10),
         spatial = c("lat", "lon"), 
         compare = TRUE,
-        bootstrap = TRUE,
         B = 10,
         seed = 1
       ) 

@@ -69,7 +69,7 @@ build_proxmat <- function(coords, k = 4) {
 default_num_knots <- function(x, min_knots = 3, max_knots = 35) {
   nu <- length(unique(x[!is.na(x)]))
   k <- round(0.25 * nu)
-  k <- max(min_knots, min(k, max_knots, nu - 1))
+  k <- min(k, max_knots)
   as.integer(k)
 }
 
@@ -141,34 +141,54 @@ default_num_knots <- function(x, min_knots = 3, max_knots = 35) {
 
 #' @keywords internal
 #' @noRd
+.prepare_smooth_draws <- function(fit) {
+  coefs <- stats::coef(fit)
+  lapply(fit$smooth, function(sm) {
+    idx    <- sm$first.para:sm$last.para
+    sp_idx <- sm$first.sp:sm$last.sp
+
+    S <- matrix(0, length(idx), length(idx))
+    for (j in seq_along(sm$S)) S <- S + fit$sp[[sp_idx[j]]] * sm$S[[j]]
+    S <- (S + t(S)) / 2
+
+    eg  <- eigen(S, symmetric = TRUE)
+    pos <- eg$values > max(eg$values) * 1e-8
+    V0  <- eg$vectors[, !pos, drop = FALSE]
+
+    list(
+      idx   = idx,
+      Vp    = eg$vectors[, pos, drop = FALSE],
+      sd    = 1 / sqrt(eg$values[pos]),
+      fixed = as.vector(V0 %*% crossprod(V0, coefs[idx]))  # unpenalised part
+    )
+  })
+}
+
+#' @keywords internal
+#' @noRd
 .bootstrap_mse_geoadditive <- function(fit, data, response, vardir_name,
                                        gam_formula, method, B = 100, seed = NULL,
                                        verbose = FALSE) {
   if (!is.null(seed)) set.seed(seed)
 
-  n <- nrow(data)
-  Xp <- stats::predict(fit, type = "lpmatrix")
-  coefs <- stats::coef(fit)
+  n          <- nrow(data)
+  Xp         <- stats::predict(fit, type = "lpmatrix")
+  coefs      <- stats::coef(fit)
   vardir_vec <- data[[vardir_name]]
-
-  smooth_list <- fit$smooth
-  n_smooth <- length(smooth_list)
-  sigma2_k <- if (n_smooth > 0) 1 / fit$sp else numeric(0)
+  draws      <- .prepare_smooth_draws(fit)
 
   sq_err <- matrix(NA_real_, n, B)
   n_fail <- 0
 
   for (b in seq_len(B)) {
     coefs_star <- coefs
-    if (n_smooth > 0) {
-      for (k in seq_len(n_smooth)) {
-        idx <- smooth_list[[k]]$first.para:smooth_list[[k]]$last.para
-        coefs_star[idx] <- stats::rnorm(length(idx), mean = 0, sd = sqrt(sigma2_k[k]))
-      }
+    for (d in draws) {
+      z <- stats::rnorm(length(d$sd))
+      coefs_star[d$idx] <- d$fixed + as.vector(d$Vp %*% (d$sd * z))
     }
+
     theta_star <- as.vector(Xp %*% coefs_star)
-    e_star <- stats::rnorm(n, mean = 0, sd = sqrt(vardir_vec))
-    y_star <- theta_star + e_star
+    y_star     <- theta_star + stats::rnorm(n, 0, sqrt(vardir_vec))
 
     data_star <- data
     data_star[[response]] <- y_star
@@ -182,12 +202,10 @@ default_num_knots <- function(x, min_knots = 3, max_knots = 35) {
       n_fail <- n_fail + 1
       next
     }
-    theta_hat_star <- stats::fitted(fit_star)
-    sq_err[, b] <- (theta_hat_star - theta_star)^2
+    sq_err[, b] <- (stats::fitted(fit_star) - theta_star)^2
   }
 
-  mse <- rowMeans(sq_err, na.rm = TRUE)
-  list(mse = mse, n_fail = n_fail, B = B)
+  list(mse = rowMeans(sq_err, na.rm = TRUE), n_fail = n_fail, B = B)
 }
 
 #' Fit an area-level Geoadditive Small Area Estimation model
@@ -198,7 +216,7 @@ default_num_knots <- function(x, min_knots = 3, max_knots = 35) {
 #'
 #' @param data A data frame containing the direct estimates, the known sampling variances, the covariates, and (if used) spatial coordinates.
 #' @param formula A model formula \code{y ~ x1 + x2} giving the response (direct estimator) on the left-hand side and the *linear* covariates on the right-hand side. Use \code{y ~ 1} if there are no linear covariates.
-#' @param vardir Name of the column in \code{data} holding the known sampling variances of the direct estimator.
+#' @param vardir Unquoted name of the column in \code{data} holding the known sampling variances of the direct estimator (e.g. \code{vardir = vardir}).
 #' @param nonlinear Character vector of covariate names to be modelled nonlinearly with a P-spline.
 #' @param spatial Character vector of length 2 giving the names of the two spatial coordinate columns (e.g. \code{c("lat", "lon")}).
 #' @param knots Optional. Controls the basis dimension (number of knots) of each nonlinear P-spline term. \code{NULL} (default) uses an automatic rule of thumb following Ruppert (2002).
@@ -207,7 +225,6 @@ default_num_knots <- function(x, min_knots = 3, max_knots = 35) {
 #' @param compare Logical. If \code{FALSE} (default), only the geoadditive model is fitted. If \code{TRUE}, comparison models are fitted and a comparison table (model | mse | rmse) is returned.
 #' @param proxmat Optional spatial proximity matrix for the Spatial Fay-Herriot model. The matrix should have one row and one column for each area, with zero diagonal and row-standardized spatial weights. If \code{NULL} and \code{compare = TRUE} with \code{spatial} specified, the matrix is constructed automatically using k-nearest neighbours based on the spatial coordinates.
 #' @param proxmat_k Number of nearest neighbours used to construct the automatic spatial proximity matrix when \code{proxmat = NULL}. Default is 4.
-#' @param bootstrap Logical. Whether to estimate the MSE of the geoadditive predictor via parametric bootstrap (\code{TRUE}). If \code{FALSE}, an analytical model-based approximation using the standard errors of the fitted GAM is used. Default \code{TRUE}.
 #' @param B Number of parametric bootstrap replicates. Default 100.
 #' @param seed Optional integer seed for the bootstrap, for reproducibility.
 #'
@@ -225,7 +242,6 @@ geosae <- function(data,
                    compare     = FALSE,
                    proxmat     = NULL,
                    proxmat_k   = 4,
-                   bootstrap   = TRUE,
                    B           = 100,
                    seed        = NULL) {
 
@@ -284,6 +300,12 @@ geosae <- function(data,
     stop("Spatial coordinate variables must be numeric.", call. = FALSE)
   }
 
+  model_vars <- unique(c(all.vars(formula), nonlinear, spatial, vardir_name))
+  if (anyNA(data[, model_vars, drop = FALSE])) {
+    stop("`data` contains missing values in the model variables; remove or impute them first.",
+         call. = FALSE)
+  }
+
   nonlinear_k <- stats::setNames(vector("list", length(nonlinear)), nonlinear)
 
   if (length(nonlinear) > 0) {
@@ -323,17 +345,18 @@ geosae <- function(data,
   point_est <- as.numeric(pred$fit)
 
   mse_geo <- rep(NA_real_, nrow(data))
-  boot_info <- NULL
+  boot_info <- .bootstrap_mse_geoadditive(
+    fit = fit,
+    data = data,
+    response = response,
+    vardir_name = vardir_name,
+    gam_formula = gam_formula,
+    method = method,
+    B = B,
+    seed = seed
+  )
 
-  if (isTRUE(bootstrap)) {
-    boot_info <- .bootstrap_mse_geoadditive(
-      fit = fit, data = data, response = response, vardir_name = vardir_name,
-      gam_formula = gam_formula, method = method, B = B, seed = seed
-    )
-    mse_geo <- boot_info$mse
-  } else {
-    mse_geo <- as.numeric(pred$se.fit)^2
-  }
+  mse_geo <- boot_info$mse
 
   area_id <- if ("area" %in% names(data)) {
     as.character(data$area)
@@ -374,7 +397,10 @@ geosae <- function(data,
     r_sq_adj          = smry$r.sq,
     deviance_explained = smry$dev.expl,
     reml_score        = fit$gcv.ubre,
-    bootstrap         = if (isTRUE(bootstrap)) list(B = B, n_failed = boot_info$n_fail) else NULL
+    bootstrap = list(
+      B = B,
+      n_failed = boot_info$n_fail
+    )
   )
 
   pt <- smry$p.table
@@ -389,29 +415,43 @@ geosae <- function(data,
 
   models <- list(geoadditive = fit)
   comparison <- NULL
+  cmp_formula <- NULL
 
   if (isTRUE(compare)) {
+    cmp_formula <- stats::reformulate(c(linear_terms, nonlinear),
+                                      response = response)
+
     rows <- list()
+    rows$direct <- .comparison_row("Direct Estimate", data[[response]],
+                                   data[[vardir_name]])
 
-    # Fit Fay-Herriot
-    fh_res <- .fit_fh(formula, vardir_name, data, method = method)
+    # Fay-Herriot
+    fh_res <- .fit_fh(cmp_formula, vardir_name, data, method = method)
     models$fh <- fh_res
-    rows$fh <- .comparison_row("Fay-Herriot", fh_res$estimates, fh_res$mse, data[[response]])
-
+    rows$fh <- .comparison_row("Fay-Herriot", fh_res$estimates, fh_res$mse)
     estimation$fh_est <- fh_res$estimates
     estimation$fh_mse <- fh_res$mse
 
-    if (is.null(proxmat)) proxmat <- build_proxmat(data[, spatial, drop = FALSE], k = proxmat_k)
+    # Spatial proximity matrix
+    if (is.null(proxmat)) {
+      proxmat <- build_proxmat(data[, spatial, drop = FALSE], k = proxmat_k)
+    } else {
+      proxmat <- as.matrix(proxmat)
+      if (!is.numeric(proxmat) || nrow(proxmat) != nrow(data) ||
+          ncol(proxmat) != nrow(data)) {
+        stop("`proxmat` must be a numeric square matrix with one row and one column per area.",
+             call. = FALSE)
+      }
+    }
 
-    # Fit Spatial Fay-Herriot
-    sfh_res <- .fit_sfh(formula, vardir_name, proxmat, data, method = method)
+    # Spatial Fay-Herriot
+    sfh_res <- .fit_sfh(cmp_formula, vardir_name, proxmat, data, method = method)
     models$sfh <- sfh_res
-    rows$sfh <- .comparison_row("Spatial Fay-Herriot", sfh_res$estimates, sfh_res$mse, data[[response]])
-
+    rows$sfh <- .comparison_row("Spatial Fay-Herriot", sfh_res$estimates, sfh_res$mse)
     estimation$sfh_est <- sfh_res$estimates
     estimation$sfh_mse <- sfh_res$mse
 
-    rows$geo <- .comparison_row("Geoadditive SAE", point_est, mse_geo, data[[response]])
+    rows$geo <- .comparison_row("Geoadditive SAE", point_est, mse_geo)
 
     comparison <- do.call(rbind, rows)
     rownames(comparison) <- NULL
@@ -423,7 +463,8 @@ geosae <- function(data,
       formula = formula, gam_formula = gam_formula, response = response,
       vardir = vardir_name, nonlinear = nonlinear, nonlinear_knots = nonlinear_k,
       spatial = spatial, spatial_k = spatial_k, method = method,
-      compare = compare, bootstrap = bootstrap, B = B, seed = seed
+      compare = compare, compare_formula = cmp_formula,
+      B = B, seed = seed
     ),
     estimation  = estimation,
     diagnostics = diagnostics,
@@ -514,21 +555,21 @@ summary.geosae <- function(object, ...) {
     cat("\n")
   }
 
-  mse_type <- if (isTRUE(s$bootstrap)) { "Bootstrap" }
-  else {"Analytical Model-Based"}
+  mse_type <- "Parametric Bootstrap"
 
   cat(sprintf("MSE Summary across areas (%s):\n", mse_type))
 
   mse <- object$estimation$geoadditive_mse
-  rmse <- sqrt(mse)
+  rmse <- sqrt(mean(mse, na.rm = TRUE))
 
   err_summary <- data.frame(
-    Min = c(min(mse, na.rm = TRUE), min(rmse, na.rm = TRUE)),
-    Mean = c(mean(mse, na.rm = TRUE), mean(rmse, na.rm = TRUE)),
-    Max = c(max(mse, na.rm = TRUE), max(rmse, na.rm = TRUE))
+    Value = c(
+      mean(mse, na.rm = TRUE),
+      rmse
+    )
   )
 
-  rownames(err_summary) <- c("MSE", "RMSE")
+  rownames(err_summary) <- c("Mean MSE", "RMSE")
 
   print(err_summary)
 

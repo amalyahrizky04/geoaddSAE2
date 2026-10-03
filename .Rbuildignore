@@ -7,3 +7,4 @@
 ^\.RDataTmp$
 ^cran-comments\.md$
 ^CRAN-SUBMISSION$
+^\.RDataTmp.*$

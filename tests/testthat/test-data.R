@@ -18,7 +18,6 @@ test_that("geosae fits simulated data", {
     vardir = vardir,
     nonlinear = "x2",
     spatial = c("lat", "lon"),
-    bootstrap = TRUE,
     B = 5,
     seed = 1
   )

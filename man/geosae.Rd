@@ -16,7 +16,6 @@ geosae(
   compare = FALSE,
   proxmat = NULL,
   proxmat_k = 4,
-  bootstrap = TRUE,
   B = 100,
   seed = NULL
 )
@@ -26,7 +25,7 @@ geosae(
 
 \item{formula}{A model formula \code{y ~ x1 + x2} giving the response (direct estimator) on the left-hand side and the *linear* covariates on the right-hand side. Use \code{y ~ 1} if there are no linear covariates.}
 
-\item{vardir}{Name of the column in \code{data} holding the known sampling variances of the direct estimator.}
+\item{vardir}{Unquoted name of the column in \code{data} holding the known sampling variances of the direct estimator (e.g. \code{vardir = vardir}).}
 
 \item{nonlinear}{Character vector of covariate names to be modelled nonlinearly with a P-spline.}
 
@@ -43,8 +42,6 @@ geosae(
 \item{proxmat}{Optional spatial proximity matrix for the Spatial Fay-Herriot model. The matrix should have one row and one column for each area, with zero diagonal and row-standardized spatial weights. If \code{NULL} and \code{compare = TRUE} with \code{spatial} specified, the matrix is constructed automatically using k-nearest neighbours based on the spatial coordinates.}
 
 \item{proxmat_k}{Number of nearest neighbours used to construct the automatic spatial proximity matrix when \code{proxmat = NULL}. Default is 4.}
-
-\item{bootstrap}{Logical. Whether to estimate the MSE of the geoadditive predictor via parametric bootstrap (\code{TRUE}). If \code{FALSE}, an analytical model-based approximation using the standard errors of the fitted GAM is used. Default \code{TRUE}.}
 
 \item{B}{Number of parametric bootstrap replicates. Default 100.}
 

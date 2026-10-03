@@ -13,6 +13,10 @@
 
   res <- eval(call_obj)
 
+  if (isFALSE(res$est$fit$convergence)) {
+    warning("The Fay-Herriot model did not converge.", call. = FALSE)
+  }
+
   list(
     estimates = as.vector(res$est$eblup),
     mse       = as.vector(res$mse),
@@ -33,7 +37,6 @@
     method  = .(method),
     data    = data_sae
   ))
-
   res_eblup <- eval(call_eblup)
 
   call_mse <- bquote(sae::mseSFH(
@@ -43,8 +46,11 @@
     method  = .(method),
     data    = data_sae
   ))
-
   res_mse <- eval(call_mse)
+
+  if (isFALSE(res_eblup$fit$convergence)) {
+    warning("The Spatial Fay-Herriot model did not converge.", call. = FALSE)
+  }
 
   list(
     estimates = as.vector(res_eblup$eblup),
@@ -53,13 +59,16 @@
   )
 }
 
+# Summary row: mse = mean of the area-level MSEs;
+# rmse = square root of that mean (consistent with the thesis tables).
 #' @keywords internal
 #' @noRd
-.comparison_row <- function(model_name, est, mse, direct) {
+.comparison_row <- function(model_name, est, mse, direct = NULL) {
+  m <- mean(mse, na.rm = TRUE)
   data.frame(
     model = model_name,
-    mse   = mean(mse, na.rm = TRUE),
-    rmse  = mean(sqrt(mse), na.rm = TRUE),
+    mse   = m,
+    rmse  = sqrt(m),
     stringsAsFactors = FALSE
   )
 }
